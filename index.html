@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クイズビルダー</title>
+  <link rel="stylesheet" href="assets/css/index.css">
+</head>
+<body>
+  <div class="builder-container">
+    <!-- 左サイドバー -->
+    <aside class="sidebar-left">
+      <div class="sidebar-header">
+        <h1>📝 クイズビルダー</h1>
+        <div class="version">Version 1.1 MVP</div>
+      </div>
+      
+      <nav class="sidebar-tabs">
+        <button class="tab-button active" data-tab="questions">
+          📋 問題管理
+        </button>
+        <button class="tab-button" data-tab="upload">
+          📁 ファイル読み込み
+        </button>
+        <button class="tab-button" data-tab="design">
+          🎨 デザイン設定
+        </button>
+        <button class="tab-button" data-tab="export">
+          📦 書き出し
+        </button>
+      </nav>
+    </aside>
+    
+    <!-- 中央エリア -->
+    <main class="main-area">
+      <header class="main-header">
+        <h2 id="current-tab-title">問題管理</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="saveQuiz()">💾 保存</button>
+          <button class="btn btn-success" onclick="previewQuiz()">▶️ プレビュー</button>
+        </div>
+      </header>
+      
+      <div class="main-content">
+        <!-- 問題管理タブ -->
+        <div id="tab-questions" class="tab-content active">
+          <div id="question-list">
+            <!-- ここに問題リストが表示される -->
+          </div>
+        </div>
+        
+        <!-- ファイル読み込みタブ -->
+        <div id="tab-upload" class="tab-content">
+          <div class="upload-section">
+            <h3>📁 CSVファイルから問題を読み込み</h3>
+            <p>CSVファイルから一括で問題を読み込むことができます。複数正解(表記ゆれ)にも対応しています。</p>
+            
+            <!-- サンプルダウンロード -->
+            <div class="upload-card">
+              <div class="upload-card-header">
+                <h4>📥 サンプルCSVをダウンロード</h4>
+              </div>
+              <p>まずはサンプルファイルをダウンロードして、フォーマットを確認してください。</p>
+              <button class="btn btn-primary btn-block" onclick="downloadSampleCSV()">
+                📥 サンプルCSVをダウンロード
+              </button>
+            </div>
+            
+            <!-- CSVアップロード -->
+            <div class="upload-card">
+              <div class="upload-card-header">
+                <h4>📤 CSVファイルをアップロード</h4>
+              </div>
+              <p>作成したCSVファイルを選択して、問題を読み込みます。</p>
+              <button class="btn btn-success btn-block" onclick="selectCSVFile()">
+                📁 CSVファイルを選択
+              </button>
+            </div>
+            
+            <!-- フォーマット説明 -->
+            <div class="upload-info">
+              <h4>📋 CSVフォーマット</h4>
+              <div class="format-example">
+                <p><strong>必須カラム:</strong></p>
+                <ul>
+                  <li><code>type</code> - 問題形式 (choice または text)</li>
+                  <li><code>question</code> - 質問文</li>
+                  <li><code>answer</code> - 正解</li>
+                </ul>
+                
+                <p><strong>choice型の場合:</strong></p>
+                <ul>
+                  <li><code>choice1, choice2, choice3, choice4</code> - 4つの選択肢(必須)</li>
+                  <li><code>answer</code> - 正解のインデックス (0〜3の数字)</li>
+                </ul>
+                
+                <p><strong>text型の場合:</strong></p>
+                <ul>
+                  <li><code>answer</code> - 正解の文字列</li>
+                  <li><code>answer2, answer3...</code> - 追加の正解パターン(任意) 🆕</li>
+                  <li>choice1〜4は空欄でOK</li>
+                </ul>
+                
+                <p><strong>任意カラム:</strong></p>
+                <ul>
+                  <li><code>explanation</code> - 解説文(空欄可)</li>
+                </ul>
+              </div>
+              
+              <div class="format-example">
+                <p><strong>🆕 複数正解の例:</strong></p>
+                <pre><code>type,question,choice1,choice2,choice3,choice4,answer,answer2,answer3,explanation
+        text,日本の首都は?,,,,,東京,tokyo,トウキョウ,表記ゆれに対応
+        text,円周率は?,,,,,3.14,3.141592,π,複数の答え方に対応</code></pre>
+                <p class="note">💡 answer2, answer3のいずれかに一致すれば正解になります。大文字小文字は区別しません。</p>
+              </div>
+              
+              <div class="format-example">
+                <p><strong>基本的な例:</strong></p>
+                <pre><code>type,question,choice1,choice2,choice3,choice4,answer,answer2,answer3,explanation
+        choice,日本で一番高い山は?,富士山,北岳,槍ヶ岳,立山,0,,,富士山は標高3776mです
+        text,日本の首都は?,,,,,東京,,,1868年から首都です</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 🆕 デザイン設定タブ(表示形式選択UI追加) -->
+        <div id="tab-design" class="tab-content">
+          <div class="design-section">
+            <h3>🎨 表示形式の設定</h3>
+            <p>クイズの表示方法を選択してください。</p>
+            
+            <div class="display-type-selector">
+              <div class="display-option">
+                <input 
+                  type="radio" 
+                  id="display-sequential" 
+                  name="displayType" 
+                  value="sequential" 
+                  checked
+                  onchange="changeDisplayType('sequential')"
+                >
+                <label for="display-sequential">
+                  <div class="option-header">
+                    <span class="option-icon">📖</span>
+                    <strong>1問ずつ表示</strong>
+                    <span class="badge badge-default">デフォルト</span>
+                  </div>
+                  <p class="option-description">
+                    1問ずつ表示し、回答後に「次へ」ボタンで進みます。<br>
+                    学習用・練習用に適しています。
+                  </p>
+                </label>
+              </div>
+              
+              <div class="display-option">
+                <input 
+                  type="radio" 
+                  id="display-list" 
+                  name="displayType" 
+                  value="list"
+                  onchange="changeDisplayType('list')"
+                >
+                <label for="display-list">
+                  <div class="option-header">
+                    <span class="option-icon">📋</span>
+                    <strong>一覧表示</strong>
+                    <span class="badge badge-info">テスト形式</span>
+                  </div>
+                  <p class="option-description">
+                    全問題を一度に表示し、全問回答後に「採点」ボタンで一括判定します。<br>
+                    テスト・試験用に適しています。
+                  </p>
+                </label>
+              </div>
+            </div>
+            
+            <div class="current-setting">
+              <strong>現在の設定:</strong>
+              <span id="current-display-type">1問ずつ表示</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 書き出しタブ -->
+        <div id="tab-export" class="tab-content">
+          <div class="export-section">
+            <h3>📦 WordPress用ファイルの書き出し</h3>
+            <p>作成したクイズをWordPressで使えるファイルとしてダウンロードします。</p>
+            
+            <div class="export-options">
+              <!-- オールインワン版 -->
+              <div class="export-card">
+                <div class="export-card-header">
+                  <h4>⭐ オールインワン版(おすすめ)</h4>
+                  <span class="badge badge-success">初心者向け</span>
+                </div>
+                <p>HTML 1ファイルだけでクイズが動作します。WordPressにコピペするだけでOK!</p>
+                <button class="btn btn-success btn-block" onclick="exportAllInOne()">
+                  📥 オールインワン版をダウンロード
+                </button>
+              </div>
+              
+              <!-- 分離版 -->
+              <div class="export-card">
+                <div class="export-card-header">
+                  <h4>📂 分離版</h4>
+                  <span class="badge badge-info">中級者向け</span>
+                </div>
+                <p>HTML、CSS、JavaScriptを別々に管理したい場合に使用します。</p>
+                <button class="btn btn-primary btn-block" onclick="exportSeparate()">
+                  📥 分離版をダウンロード(3ファイル)
+                </button>
+              </div>
+              
+              <!-- まとめてダウンロード -->
+              <div class="export-card">
+                <div class="export-card-header">
+                  <h4>📦 全パターン</h4>
+                </div>
+                <p>オールインワン版と分離版の両方をまとめてダウンロードします。</p>
+                <button class="btn btn-primary btn-block" onclick="exportAll()">
+                  📥 全パターンをダウンロード(4ファイル)
+                </button>
+              </div>
+            </div>
+            
+            <!-- プレビュー -->
+            <div class="export-preview">
+              <h4>📋 クイズ情報</h4>
+              <div class="quiz-info">
+                <div class="info-item">
+                  <span class="info-label">タイトル:</span>
+                  <span class="info-value" id="export-title">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">問題数:</span>
+                  <span class="info-value" id="export-count">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">choice型:</span>
+                  <span class="info-value" id="export-choice-count">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">text型:</span>
+                  <span class="info-value" id="export-text-count">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">表示形式:</span>
+                  <span class="info-value" id="export-display-type">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 右サイドバー(プレビュー) -->
+    <aside class="sidebar-right">
+      <div class="preview-header">
+        <h3>👁️ プレビュー</h3>
+      </div>
+      <div class="preview-content">
+        <div id="preview-area">
+          <div class="placeholder">
+            <h3>プレビュー</h3>
+            <p>クイズのプレビューがここに表示されます</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 編集モーダル -->
+  <div id="edit-modal" class="modal" style="display: none;">
+    <!-- モーダルの内容は省略(builder.jsで制御) -->
+  </div>
+
+  <!-- JavaScript -->
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/builder.js"></script>
+    <script src="assets/js/export.js"></script>
+    <script src="assets/js/csv-loader.js"></script> 
+
+  <script>
+    // タブ切り替え機能
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', function() {
+        const tabName = this.dataset.tab;
+        
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        this.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        const titles = {
+          'questions': '問題管理',
+          'upload': 'ファイル読み込み',
+          'design': 'デザイン設定',
+          'export': '書き出し'
+        };
+        document.getElementById('current-tab-title').textContent = titles[tabName];
+      });
+    });
+    
+    // 保存・プレビューボタン
+    function saveQuiz() {
+      alert('💾 保存機能は実装中です');
+    }
+    
+    function previewQuiz() {
+      alert('▶️ プレビュー機能は実装中です');
+    }
+    
+    // 🆕 表示形式変更関数
+    function changeDisplayType(type) {
+      console.log('🎨 表示形式変更:', type);
+      
+      if (typeof quizData !== 'undefined') {
+        quizData.meta.displayType = type;
+        console.log('✅ quizData.meta.displayType =', type);
+      }
+      
+      const currentDisplayElement = document.getElementById('current-display-type');
+      if (currentDisplayElement) {
+        if (type === 'sequential') {
+          currentDisplayElement.textContent = '1問ずつ表示';
+        } else if (type === 'list') {
+          currentDisplayElement.textContent = '一覧表示';
+        }
+      }
+      
+      if (typeof updatePreview === 'function') {
+        updatePreview();
+      }
+      
+      if (typeof updateExportInfo === 'function') {
+        updateExportInfo();
+      }
+    }
+    
+    // 書き出し機能
+    function exportAllInOne() {
+      console.log('📥 オールインワン版ダウンロード');
+      
+      if (!validateQuizData()) return;
+      
+      try {
+        exportAllInOneWithDisplayType();
+      } catch (error) {
+        console.error('❌ ダウンロードエラー:', error);
+        alert('❌ ダウンロード失敗: ' + error.message);
+      }
+    }
+    
+    function exportSeparate() {
+      console.log('📥 分離版ダウンロード');
+      
+      if (!validateQuizData()) return;
+      
+      try {
+        downloadAllFiles();
+      } catch (error) {
+        console.error('❌ ダウンロードエラー:', error);
+        alert('❌ ダウンロード失敗: ' + error.message);
+      }
+    }
+    
+    function exportAll() {
+      console.log('📥 全パターンダウンロード');
+      
+      if (!validateQuizData()) return;
+      
+      try {
+        downloadAllFilesWithOptions();
+      } catch (error) {
+        console.error('❌ ダウンロードエラー:', error);
+        alert('❌ ダウンロード失敗: ' + error.message);
+      }
+    }
+    
+    function validateQuizData() {
+      if (!quizData.questions || quizData.questions.length === 0) {
+        alert('⚠️ 問題が1つもありません。\n\n先に問題を追加してください。');
+        return false;
+      }
+      return true;
+    }
+    
+    // 書き出しタブのクイズ情報を更新
+    function updateExportInfo() {
+      if (!quizData || !quizData.questions) return;
+      
+      const choiceCount = quizData.questions.filter(q => q.type === 'choice').length;
+      const textCount = quizData.questions.filter(q => q.type === 'text').length;
+      
+      const titleElement = document.getElementById('export-title');
+      const countElement = document.getElementById('export-count');
+      const choiceCountElement = document.getElementById('export-choice-count');
+      const textCountElement = document.getElementById('export-text-count');
+      const displayTypeElement = document.getElementById('export-display-type');
+      
+      if (titleElement) titleElement.textContent = quizData.meta.title || '(未設定)';
+      if (countElement) countElement.textContent = quizData.questions.length + '問';
+      if (choiceCountElement) choiceCountElement.textContent = choiceCount + '問';
+      if (textCountElement) textCountElement.textContent = textCount + '問';
+      if (displayTypeElement) {
+        const displayType = quizData.meta.displayType || 'sequential';
+        displayTypeElement.textContent = displayType === 'list' ? '一覧表示' : '1問ずつ表示';
+      }
+    }
+    
+    // 初期化
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🎬 ビルダー初期化');
+      
+      if (typeof quizData === 'undefined') {
+        console.error('❌ quizDataが読み込まれていません');
+        alert('エラー: data.jsが読み込まれていません');
+        return;
+      }
+      
+      if (typeof renderQuestionList === 'undefined') {
+        console.error('❌ renderQuestionListが読み込まれていません');
+        alert('エラー: builder.jsが読み込まれていません');
+        return;
+      }
+      
+      console.log('✅ 必要なファイルが全て読み込まれています');
+      
+      // 問題リストを表示
+      renderQuestionList();
+      
+      // プレビューを更新
+      updatePreview();
+      
+      // 書き出し情報を更新
+      updateExportInfo();
+      
+      // 表示形式の初期設定を反映
+      if (quizData.meta.displayType) {
+        const displayType = quizData.meta.displayType;
+        const radioButton = document.getElementById('display-' + displayType);
+        if (radioButton) {
+          radioButton.checked = true;
+        }
+        
+        const currentDisplayElement = document.getElementById('current-display-type');
+        if (currentDisplayElement) {
+          if (displayType === 'sequential') {
+            currentDisplayElement.textContent = '1問ずつ表示';
+          } else if (displayType === 'list') {
+            currentDisplayElement.textContent = '一覧表示';
+          }
+        }
+      }
+      
+      console.log('✅ ビルダー初期化完了');
+    });
+  </script>
+</body>
+</html>
