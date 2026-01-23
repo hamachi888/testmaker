@@ -1,0 +1,486 @@
+/**
+ * quiz-list.css
+ * 
+ * 一覧表示型クイズのスタイル
+ */
+
+/* =====================================
+   基本設定
+   ===================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+#app, #quiz-app-root {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* =====================================
+   クイズアプリ全体
+   ===================================== */
+.quiz-app {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* =====================================
+   ヘッダー
+   ===================================== */
+.quiz-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.quiz-header h1 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.quiz-info {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* =====================================
+   問題リスト
+   ===================================== */
+.quiz-questions {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.question-item {
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.question-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 採点後の色 */
+.question-item.correct {
+  border-color: #2ecc71;
+  background: #d4edda;
+}
+
+.question-item.incorrect {
+  border-color: #e74c3c;
+  background: #f8d7da;
+}
+
+/* =====================================
+   問題ヘッダー
+   ===================================== */
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.question-number {
+  font-weight: bold;
+  color: #667eea;
+  font-size: 14px;
+}
+
+.question-status {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.status-correct {
+  color: #27ae60;
+  animation: popIn 0.5s ease;
+}
+
+.status-incorrect {
+  color: #e74c3c;
+  animation: popIn 0.5s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* =====================================
+   問題文
+   ===================================== */
+.question-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* =====================================
+   回答エリア
+   ===================================== */
+.question-answer {
+  margin-bottom: 15px;
+}
+
+/* choice型の選択肢 */
+.choices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice-label {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: white;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.choice-label:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.choice-label input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.choice-text {
+  flex: 1;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+/* 正解/不正解の色 */
+.choice-correct {
+  background: #d4edda !important;
+  border-color: #2ecc71 !important;
+}
+
+.choice-incorrect {
+  background: #f8d7da !important;
+  border-color: #e74c3c !important;
+}
+
+/* text型の入力欄 */
+.text-answer-input {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.text-answer-input:focus {
+  border-color: #667eea;
+}
+
+.text-answer-input:disabled {
+  background: #ecf0f1;
+  cursor: not-allowed;
+}
+
+.input-correct {
+  border-color: #2ecc71 !important;
+  background: #d4edda !important;
+}
+
+.input-incorrect {
+  border-color: #e74c3c !important;
+  background: #f8d7da !important;
+}
+
+.correct-answer-text {
+  display: block;
+  margin-top: 10px;
+  padding: 10px;
+  background: #d4edda;
+  border-left: 4px solid #2ecc71;
+  border-radius: 4px;
+  color: #155724;
+  font-weight: bold;
+}
+
+/* =====================================
+   解説エリア
+   ===================================== */
+.explanation-area {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.explanation-toggle {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  color: #667eea;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.explanation-toggle:hover {
+  background: #667eea;
+  color: white;
+}
+
+.toggle-icon {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.explanation-content {
+  margin-top: 10px;
+  padding: 15px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  color: #2c3e50;
+  line-height: 1.6;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================================
+   採点ボタン
+   ===================================== */
+.quiz-actions {
+  padding: 20px;
+  text-align: center;
+  background: #f8f9fa;
+}
+
+.btn-grade {
+  padding: 18px 50px;
+  font-size: 20px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-grade:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-grade:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-grade:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* =====================================
+   結果表示
+   ===================================== */
+.result-area {
+  padding: 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.result-summary {
+  text-align: center;
+}
+
+.result-summary h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.result-score {
+  font-size: 48px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.score-number {
+  color: #ffd700;
+  font-size: 64px;
+}
+
+.score-separator {
+  opacity: 0.7;
+}
+
+.score-total {
+  opacity: 0.9;
+}
+
+.score-unit {
+  font-size: 24px;
+  opacity: 0.9;
+}
+
+.result-percentage {
+  font-size: 36px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.result-message {
+  font-size: 20px;
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+/* =====================================
+   レスポンシブ
+   ===================================== */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
+  .quiz-header {
+    padding: 20px;
+  }
+  
+  .quiz-header h1 {
+    font-size: 22px;
+  }
+  
+  .quiz-questions {
+    padding: 10px;
+  }
+  
+  .question-item {
+    padding: 15px;
+  }
+  
+  .question-text {
+    font-size: 16px;
+  }
+  
+  .btn-grade {
+    padding: 15px 40px;
+    font-size: 18px;
+  }
+  
+  .result-score {
+    font-size: 36px;
+  }
+  
+  .score-number {
+    font-size: 48px;
+  }
+}
+
+/* =====================================
+   判定表示（吹き出し）
+   ===================================== */
+
+/* ステータス吹き出し */
+.status-bubble {
+  font-size: 24px;
+  animation: popIn 0.3s ease;
+}
+
+.bubble-correct {
+  color: #27ae60;
+}
+
+.bubble-incorrect {
+  color: #e74c3c;
+}
+
+/* 選択肢横の吹き出し */
+.choice-bubble {
+  margin-left: 10px;
+  font-size: 20px;
+  animation: popIn 0.3s ease;
+}
+
+/* 入力欄横の吹き出し */
+.input-bubble {
+  margin-left: 10px;
+  font-size: 20px;
+  animation: popIn 0.3s ease;
+}
+
+/* スムーズなスクロール */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 20px;
+}
