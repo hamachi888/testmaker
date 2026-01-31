@@ -669,6 +669,417 @@
     <!-- モーダルの内容は省略(builder.jsで制御) -->
   </div>
 
+  <!-- プレビューモーダル -->
+  <div id="preview-modal" class="modal" style="display: none;">
+    <div class="modal-content preview-modal-content">
+      <div class="modal-header">
+        <h2>👁️ クイズプレビュー</h2>
+        <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+      </div>
+      
+      <div class="preview-tabs">
+        <button class="preview-tab active" data-preview-tab="list" onclick="switchPreviewTab('list')">
+          📋 問題一覧
+        </button>
+        <button class="preview-tab" data-preview-tab="quiz" onclick="switchPreviewTab('quiz')">
+          ▶️ クイズ実行
+        </button>
+      </div>
+      
+      <div id="preview-tab-list" class="preview-tab-content active">
+        <div id="preview-question-list"></div>
+      </div>
+      
+      <div id="preview-tab-quiz" class="preview-tab-content">
+        <div id="preview-quiz-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* プレビューモーダルのスタイル */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    
+    .preview-modal-content {
+      background: white;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      padding: 20px 30px;
+      border-bottom: 2px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f9fa;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 32px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    
+    .modal-close:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-tabs {
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+      background: #f8f9fa;
+    }
+    
+    .preview-tab {
+      flex: 1;
+      padding: 15px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .preview-tab:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .preview-tab.active {
+      background: white;
+      border-bottom-color: #3498db;
+      color: #3498db;
+    }
+    
+    .preview-tab-content {
+      display: none;
+      padding: 30px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .preview-tab-content.active {
+      display: block;
+    }
+    
+    /* 問題一覧スタイル */
+    .preview-question-item {
+      background: #f8f9fa;
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+    }
+    
+    .preview-question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .preview-question-number {
+      font-weight: bold;
+      color: #3498db;
+      font-size: 14px;
+    }
+    
+    .preview-question-type {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .preview-question-type.choice {
+      background: #e8f4f8;
+      color: #2980b9;
+    }
+    
+    .preview-question-type.text {
+      background: #fef5e7;
+      color: #d68910;
+    }
+    
+    .preview-question-text {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: #2c3e50;
+    }
+    
+    .preview-choices {
+      margin-left: 20px;
+    }
+    
+    .preview-choice {
+      padding: 8px 12px;
+      margin: 6px 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .preview-choice.correct {
+      background: #d5f4e6;
+      border-color: #27ae60;
+      font-weight: 500;
+    }
+    
+    .preview-answer {
+      margin-top: 10px;
+      padding: 10px;
+      background: #d5f4e6;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .preview-answer strong {
+      color: #27ae60;
+    }
+    
+    .preview-explanation {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff3cd;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #856404;
+    }
+    
+    /* クイズ実行スタイル */
+    .quiz-header {
+      background: #3498db;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .quiz-progress {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .quiz-progress-bar {
+      background: rgba(255, 255, 255, 0.3);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .quiz-progress-fill {
+      background: white;
+      height: 100%;
+      transition: width 0.3s;
+    }
+    
+    .quiz-question-card {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .quiz-question-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+    
+    .quiz-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .quiz-choice-button {
+      padding: 15px 20px;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quiz-choice-button:hover {
+      border-color: #3498db;
+      background: #f0f8ff;
+    }
+    
+    .quiz-choice-button.selected {
+      border-color: #3498db;
+      background: #e8f4f8;
+    }
+    
+    .quiz-choice-button.correct {
+      border-color: #27ae60;
+      background: #d5f4e6;
+    }
+    
+    .quiz-choice-button.incorrect {
+      border-color: #e74c3c;
+      background: #fadbd8;
+    }
+    
+    .quiz-text-input {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+    
+    .quiz-text-input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+    
+    .quiz-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+    
+    .quiz-button {
+      flex: 1;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quiz-button-primary {
+      background: #3498db;
+      color: white;
+    }
+    
+    .quiz-button-primary:hover {
+      background: #2980b9;
+    }
+    
+    .quiz-button-success {
+      background: #27ae60;
+      color: white;
+    }
+    
+    .quiz-button-success:hover {
+      background: #229954;
+    }
+    
+    .quiz-button-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+    
+    .quiz-button-secondary:hover {
+      background: #7f8c8d;
+    }
+    
+    .quiz-feedback {
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    
+    .quiz-feedback.correct {
+      background: #d5f4e6;
+      border: 2px solid #27ae60;
+      color: #27ae60;
+    }
+    
+    .quiz-feedback.incorrect {
+      background: #fadbd8;
+      border: 2px solid #e74c3c;
+      color: #c0392b;
+    }
+    
+    .quiz-result {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .quiz-result-title {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    
+    .quiz-result-score {
+      font-size: 48px;
+      font-weight: bold;
+      color: #3498db;
+      margin-bottom: 30px;
+    }
+    
+    .quiz-result-message {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+    }
+    
+    /* 一覧表示モード用スタイル */
+    .quiz-list-mode .quiz-question-card {
+      margin-bottom: 30px;
+    }
+    
+    .quiz-list-mode .quiz-question-number {
+      display: inline-block;
+      background: #3498db;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+  </style>
+
   <!-- JavaScript -->
     <script src="assets/js/data.js"></script>
     <script src="assets/js/builder.js"></script>
@@ -707,7 +1118,13 @@
     }
     
     function previewQuiz() {
-      alert('▶️ プレビュー機能は実装中です');
+      if (!quizData.questions || quizData.questions.length === 0) {
+        alert('⚠️ プレビューする問題がありません。\n\n先に問題を追加してください。');
+        return;
+      }
+      
+      // プレビューモーダルを開く
+      openPreviewModal();
     }
     
     // 🆕 表示形式変更関数
@@ -855,6 +1272,457 @@
       
       console.log('✅ ビルダー初期化完了');
     });
+    
+    // プレビューモーダル関連の関数
+    let previewState = {
+      currentQuestionIndex: 0,
+      userAnswers: [],
+      score: 0,
+      isAnswered: false
+    };
+    
+    function openPreviewModal() {
+      const modal = document.getElementById('preview-modal');
+      modal.style.display = 'flex';
+      
+      // 問題一覧を表示
+      renderPreviewQuestionList();
+      
+      // クイズ実行タブは初期化のみ
+      previewState = {
+        currentQuestionIndex: 0,
+        userAnswers: [],
+        score: 0,
+        isAnswered: false
+      };
+    }
+    
+    function closePreviewModal() {
+      const modal = document.getElementById('preview-modal');
+      modal.style.display = 'none';
+    }
+    
+    function switchPreviewTab(tabName) {
+      // タブボタンの切り替え
+      document.querySelectorAll('.preview-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`[data-preview-tab="${tabName}"]`).classList.add('active');
+      
+      // タブコンテンツの切り替え
+      document.querySelectorAll('.preview-tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`preview-tab-${tabName}`).classList.add('active');
+      
+      // クイズ実行タブに切り替えた時、クイズを初期化
+      if (tabName === 'quiz') {
+        initQuizPreview();
+      }
+    }
+    
+    function renderPreviewQuestionList() {
+      const container = document.getElementById('preview-question-list');
+      
+      if (!quizData.questions || quizData.questions.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #999;">問題がありません</p>';
+        return;
+      }
+      
+      let html = '';
+      quizData.questions.forEach((q, index) => {
+        html += `
+          <div class="preview-question-item">
+            <div class="preview-question-header">
+              <span class="preview-question-number">問題 ${index + 1}</span>
+              <span class="preview-question-type ${q.type}">${q.type === 'choice' ? '選択式' : '記述式'}</span>
+            </div>
+            <div class="preview-question-text">${q.question}</div>
+        `;
+        
+        if (q.type === 'choice') {
+          html += '<div class="preview-choices">';
+          q.choices.forEach((choice, i) => {
+            const isCorrect = i === parseInt(q.answer);
+            html += `<div class="preview-choice ${isCorrect ? 'correct' : ''}">${choice}${isCorrect ? ' ✓' : ''}</div>`;
+          });
+          html += '</div>';
+        } else {
+          // text型の場合、複数正解を表示
+          const answers = [q.answer];
+          if (q.answer2) answers.push(q.answer2);
+          if (q.answer3) answers.push(q.answer3);
+          html += `<div class="preview-answer"><strong>正解:</strong> ${answers.join(' / ')}</div>`;
+        }
+        
+        if (q.explanation) {
+          html += `<div class="preview-explanation">💡 ${q.explanation}</div>`;
+        }
+        
+        html += '</div>';
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    function initQuizPreview() {
+      previewState = {
+        currentQuestionIndex: 0,
+        userAnswers: new Array(quizData.questions.length).fill(null),
+        score: 0,
+        isAnswered: false
+      };
+      
+      const displayType = quizData.meta.displayType || 'sequential';
+      
+      if (displayType === 'sequential') {
+        renderSequentialQuiz();
+      } else {
+        renderListQuiz();
+      }
+    }
+    
+    function renderSequentialQuiz() {
+      const container = document.getElementById('preview-quiz-container');
+      const currentQ = quizData.questions[previewState.currentQuestionIndex];
+      const progress = ((previewState.currentQuestionIndex + 1) / quizData.questions.length) * 100;
+      
+      let html = `
+        <div class="quiz-header">
+          <div class="quiz-progress">問題 ${previewState.currentQuestionIndex + 1} / ${quizData.questions.length}</div>
+          <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill" style="width: ${progress}%"></div>
+          </div>
+        </div>
+        
+        <div class="quiz-question-card">
+          <div class="quiz-question-text">${currentQ.question}</div>
+      `;
+      
+      if (currentQ.type === 'choice') {
+        html += '<div class="quiz-choices">';
+        currentQ.choices.forEach((choice, i) => {
+          const isSelected = previewState.userAnswers[previewState.currentQuestionIndex] === i;
+          const correctAnswer = parseInt(currentQ.answer);
+          
+          let btnClass = 'quiz-choice-button';
+          if (previewState.isAnswered) {
+            if (i === correctAnswer) btnClass += ' correct';
+            else if (isSelected) btnClass += ' incorrect';
+          } else if (isSelected) {
+            btnClass += ' selected';
+          }
+          
+          html += `
+            <button class="${btnClass}" 
+                    onclick="selectChoiceAnswer(${i})"
+                    ${previewState.isAnswered ? 'disabled' : ''}>
+              ${choice}
+            </button>
+          `;
+        });
+        html += '</div>';
+      } else {
+        const userAnswer = previewState.userAnswers[previewState.currentQuestionIndex] || '';
+        html += `
+          <input type="text" 
+                 class="quiz-text-input" 
+                 id="text-answer-input"
+                 value="${userAnswer}"
+                 ${previewState.isAnswered ? 'disabled' : ''}
+                 placeholder="答えを入力してください">
+        `;
+      }
+      
+      html += '<div class="quiz-buttons">';
+      
+      if (!previewState.isAnswered) {
+        html += '<button class="quiz-button quiz-button-primary" onclick="checkAnswer()">回答する</button>';
+      } else {
+        if (previewState.currentQuestionIndex < quizData.questions.length - 1) {
+          html += '<button class="quiz-button quiz-button-success" onclick="nextQuestion()">次の問題へ →</button>';
+        } else {
+          html += '<button class="quiz-button quiz-button-success" onclick="showResult()">結果を見る</button>';
+        }
+      }
+      
+      html += '</div>';
+      
+      // フィードバック表示
+      if (previewState.isAnswered) {
+        const isCorrect = checkCurrentAnswer();
+        html += `
+          <div class="quiz-feedback ${isCorrect ? 'correct' : 'incorrect'}">
+            ${isCorrect ? '✓ 正解です!' : '✗ 不正解です'}
+          </div>
+        `;
+        
+        if (currentQ.explanation) {
+          html += `<div class="quiz-feedback" style="background: #fff3cd; border-color: #ffc107; color: #856404;">💡 ${currentQ.explanation}</div>`;
+        }
+      }
+      
+      html += '</div>';
+      
+      container.innerHTML = html;
+    }
+    
+    function renderListQuiz() {
+      const container = document.getElementById('preview-quiz-container');
+      
+      if (previewState.isAnswered) {
+        showListResult();
+        return;
+      }
+      
+      let html = `
+        <div class="quiz-header">
+          <div class="quiz-progress">全 ${quizData.questions.length} 問</div>
+        </div>
+        <div class="quiz-list-mode">
+      `;
+      
+      quizData.questions.forEach((q, index) => {
+        html += `
+          <div class="quiz-question-card">
+            <div class="quiz-question-number">問題 ${index + 1}</div>
+            <div class="quiz-question-text">${q.question}</div>
+        `;
+        
+        if (q.type === 'choice') {
+          html += '<div class="quiz-choices">';
+          q.choices.forEach((choice, i) => {
+            const isSelected = previewState.userAnswers[index] === i;
+            html += `
+              <button class="quiz-choice-button ${isSelected ? 'selected' : ''}" 
+                      onclick="selectListChoiceAnswer(${index}, ${i})">
+                ${choice}
+              </button>
+            `;
+          });
+          html += '</div>';
+        } else {
+          const userAnswer = previewState.userAnswers[index] || '';
+          html += `
+            <input type="text" 
+                   class="quiz-text-input" 
+                   id="list-text-answer-${index}"
+                   value="${userAnswer}"
+                   oninput="updateListTextAnswer(${index}, this.value)"
+                   placeholder="答えを入力してください">
+          `;
+        }
+        
+        html += '</div>';
+      });
+      
+      html += `
+          </div>
+          <div class="quiz-buttons">
+            <button class="quiz-button quiz-button-success" onclick="submitListQuiz()">採点する</button>
+          </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+    
+    function selectChoiceAnswer(choiceIndex) {
+      if (previewState.isAnswered) return;
+      previewState.userAnswers[previewState.currentQuestionIndex] = choiceIndex;
+      renderSequentialQuiz();
+    }
+    
+    function selectListChoiceAnswer(questionIndex, choiceIndex) {
+      previewState.userAnswers[questionIndex] = choiceIndex;
+      renderListQuiz();
+    }
+    
+    function updateListTextAnswer(questionIndex, value) {
+      previewState.userAnswers[questionIndex] = value;
+    }
+    
+    function checkAnswer() {
+      const currentQ = quizData.questions[previewState.currentQuestionIndex];
+      
+      if (currentQ.type === 'text') {
+        const input = document.getElementById('text-answer-input');
+        previewState.userAnswers[previewState.currentQuestionIndex] = input.value;
+      }
+      
+      if (previewState.userAnswers[previewState.currentQuestionIndex] === null || 
+          previewState.userAnswers[previewState.currentQuestionIndex] === '') {
+        alert('⚠️ 回答を選択または入力してください');
+        return;
+      }
+      
+      previewState.isAnswered = true;
+      
+      if (checkCurrentAnswer()) {
+        previewState.score++;
+      }
+      
+      renderSequentialQuiz();
+    }
+    
+    function checkCurrentAnswer() {
+      const currentQ = quizData.questions[previewState.currentQuestionIndex];
+      const userAnswer = previewState.userAnswers[previewState.currentQuestionIndex];
+      
+      if (currentQ.type === 'choice') {
+        return userAnswer === parseInt(currentQ.answer);
+      } else {
+        const correctAnswers = [currentQ.answer];
+        if (currentQ.answer2) correctAnswers.push(currentQ.answer2);
+        if (currentQ.answer3) correctAnswers.push(currentQ.answer3);
+        
+        return correctAnswers.some(ans => 
+          ans.toLowerCase().trim() === userAnswer.toLowerCase().trim()
+        );
+      }
+    }
+    
+    function nextQuestion() {
+      previewState.currentQuestionIndex++;
+      previewState.isAnswered = false;
+      renderSequentialQuiz();
+    }
+    
+    function submitListQuiz() {
+      // 未回答チェック
+      const unanswered = previewState.userAnswers.some((ans, i) => {
+        if (ans === null || ans === '') return true;
+        return false;
+      });
+      
+      if (unanswered) {
+        if (!confirm('未回答の問題があります。このまま採点しますか?')) {
+          return;
+        }
+      }
+      
+      // テキスト入力の値を取得
+      quizData.questions.forEach((q, index) => {
+        if (q.type === 'text') {
+          const input = document.getElementById(`list-text-answer-${index}`);
+          if (input) {
+            previewState.userAnswers[index] = input.value;
+          }
+        }
+      });
+      
+      // 採点
+      previewState.score = 0;
+      quizData.questions.forEach((q, index) => {
+        const userAnswer = previewState.userAnswers[index];
+        
+        if (q.type === 'choice') {
+          if (userAnswer === parseInt(q.answer)) {
+            previewState.score++;
+          }
+        } else {
+          const correctAnswers = [q.answer];
+          if (q.answer2) correctAnswers.push(q.answer2);
+          if (q.answer3) correctAnswers.push(q.answer3);
+          
+          if (correctAnswers.some(ans => 
+            ans.toLowerCase().trim() === (userAnswer || '').toLowerCase().trim()
+          )) {
+            previewState.score++;
+          }
+        }
+      });
+      
+      previewState.isAnswered = true;
+      showListResult();
+    }
+    
+    function showListResult() {
+      const container = document.getElementById('preview-quiz-container');
+      const percentage = Math.round((previewState.score / quizData.questions.length) * 100);
+      
+      let message = '';
+      if (percentage >= 90) message = '素晴らしい!';
+      else if (percentage >= 70) message = 'よくできました!';
+      else if (percentage >= 50) message = 'もう少し頑張りましょう!';
+      else message = '復習が必要です';
+      
+      let html = `
+        <div class="quiz-result">
+          <div class="quiz-result-title">🎉 結果発表</div>
+          <div class="quiz-result-score">${previewState.score} / ${quizData.questions.length}</div>
+          <div class="quiz-result-message">${message} (正答率: ${percentage}%)</div>
+          <button class="quiz-button quiz-button-primary" onclick="initQuizPreview()" style="max-width: 300px; margin: 0 auto;">もう一度挑戦</button>
+        </div>
+        
+        <div style="margin-top: 40px;">
+          <h3 style="text-align: center; margin-bottom: 20px;">📋 解答一覧</h3>
+      `;
+      
+      quizData.questions.forEach((q, index) => {
+        const userAnswer = previewState.userAnswers[index];
+        let isCorrect = false;
+        let correctAnswerText = '';
+        
+        if (q.type === 'choice') {
+          isCorrect = userAnswer === parseInt(q.answer);
+          correctAnswerText = q.choices[parseInt(q.answer)];
+        } else {
+          const correctAnswers = [q.answer];
+          if (q.answer2) correctAnswers.push(q.answer2);
+          if (q.answer3) correctAnswers.push(q.answer3);
+          
+          isCorrect = correctAnswers.some(ans => 
+            ans.toLowerCase().trim() === (userAnswer || '').toLowerCase().trim()
+          );
+          correctAnswerText = correctAnswers.join(' / ');
+        }
+        
+        html += `
+          <div class="preview-question-item" style="border-left-color: ${isCorrect ? '#27ae60' : '#e74c3c'}">
+            <div class="preview-question-header">
+              <span class="preview-question-number">問題 ${index + 1}</span>
+              <span style="color: ${isCorrect ? '#27ae60' : '#e74c3c'}; font-weight: bold;">
+                ${isCorrect ? '✓ 正解' : '✗ 不正解'}
+              </span>
+            </div>
+            <div class="preview-question-text">${q.question}</div>
+            <div style="margin-top: 10px;">
+              <div style="padding: 8px; background: ${isCorrect ? '#d5f4e6' : '#fadbd8'}; border-radius: 4px; margin-bottom: 5px;">
+                <strong>あなたの回答:</strong> ${userAnswer !== null && userAnswer !== '' ? (q.type === 'choice' ? q.choices[userAnswer] : userAnswer) : '(未回答)'}
+              </div>
+              <div style="padding: 8px; background: #d5f4e6; border-radius: 4px;">
+                <strong>正解:</strong> ${correctAnswerText}
+              </div>
+            </div>
+            ${q.explanation ? `<div class="preview-explanation">💡 ${q.explanation}</div>` : ''}
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      
+      container.innerHTML = html;
+    }
+    
+    function showResult() {
+      const container = document.getElementById('preview-quiz-container');
+      const percentage = Math.round((previewState.score / quizData.questions.length) * 100);
+      
+      let message = '';
+      if (percentage >= 90) message = '素晴らしい!';
+      else if (percentage >= 70) message = 'よくできました!';
+      else if (percentage >= 50) message = 'もう少し頑張りましょう!';
+      else message = '復習が必要です';
+      
+      container.innerHTML = `
+        <div class="quiz-result">
+          <div class="quiz-result-title">🎉 クイズ終了!</div>
+          <div class="quiz-result-score">${previewState.score} / ${quizData.questions.length}</div>
+          <div class="quiz-result-message">${message} (正答率: ${percentage}%)</div>
+          <button class="quiz-button quiz-button-primary" onclick="initQuizPreview()" style="max-width: 300px; margin: 0 auto;">もう一度挑戦</button>
+        </div>
+      `;
+    }
   </script>
 </body>
 </html>
