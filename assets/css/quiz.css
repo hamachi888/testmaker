@@ -396,3 +396,93 @@ body {
  * 
  * これで、色やサイズが変わるときに滑らかに変化します
  */
+ /* quiz.css に以下のスタイルを追加してください */
+
+/* =====================================
+   🖼️ 問題画像
+   ===================================== */
+
+.question-image {
+  display: block;
+  max-width: 100%;
+  max-height: 400px;
+  margin: 20px auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* =====================================
+   🎨 選択肢画像
+   ===================================== */
+
+.choice-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  font-size: 16px;
+  background-color: #ffffff;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.choice-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.choice-text {
+  flex: 1;
+}
+
+.choice-button:hover {
+  background-color: #3498db;
+  color: white;
+  transform: translateX(5px);
+}
+
+.choice-button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.choice-button:disabled:hover {
+  transform: none !important;
+}
+
+/* 選択肢画像のみの場合 */
+.choice-button:has(.choice-image):not(:has(.choice-text:not(:empty))) {
+  justify-content: center;
+  padding: 10px;
+}
+
+.choice-button:has(.choice-image):not(:has(.choice-text:not(:empty))) .choice-image {
+  width: 120px;
+  height: 120px;
+}
+
+/* =====================================
+   📱 レスポンシブ対応
+   ===================================== */
+
+@media (max-width: 600px) {
+  .question-image {
+    max-height: 250px;
+  }
+  
+  .choice-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .choice-button {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+}
