@@ -273,8 +273,399 @@
     </aside>
   </div>
 
-  <!-- 編集モーダル -->
-  <div id="edit-modal" class="modal" style="display: none;">
+  <!-- 編集モーダル (画像対応版) -->
+<!-- index.htmlの既存の編集モーダルを以下で置き換えてください -->
+
+<div id="edit-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-title">問題を編集</h2>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <form id="question-form">
+        <!-- 問題タイプ選択 -->
+        <div class="form-group">
+          <label>問題タイプ</label>
+          <select id="edit-type" onchange="toggleQuestionType()">
+            <option value="choice">4択クイズ</option>
+            <option value="text">テキスト入力</option>
+          </select>
+        </div>
+        
+        <!-- 問題文 -->
+        <div class="form-group">
+          <label>問題文 <span class="required">*</span></label>
+          <textarea id="edit-question" rows="3" placeholder="問題文を入力してください" required></textarea>
+        </div>
+        
+        <!-- 🆕 問題画像 -->
+        <div class="form-group">
+          <label>問題画像 (任意)</label>
+          <div class="image-upload-area">
+            <div id="question-image-preview" class="image-preview-area">
+              <p class="no-image">画像なし</p>
+            </div>
+            <div class="image-upload-buttons">
+              <button type="button" class="btn btn-sm btn-primary" onclick="uploadQuestionImage()">
+                📁 ファイルから選択
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="uploadQuestionImageByURL()">
+                🔗 URLで追加
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- choice型の場合の選択肢 -->
+        <div id="choices-area">
+          <div class="form-group">
+            <label>選択肢</label>
+            <div class="choice-inputs">
+              <!-- 選択肢1 -->
+              <div class="choice-input-group">
+                <div class="choice-input-row">
+                  <input type="text" id="edit-choice-0" placeholder="選択肢1">
+                  <input type="radio" name="correct-answer" value="0">
+                </div>
+                <div class="choice-image-area">
+                  <div id="choice-image-preview-0" class="choice-image-preview">
+                    <p class="no-image-small">画像なし</p>
+                  </div>
+                  <button type="button" class="btn-image-upload" onclick="uploadChoiceImage(0)">
+                    🖼️ 画像
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 選択肢2 -->
+              <div class="choice-input-group">
+                <div class="choice-input-row">
+                  <input type="text" id="edit-choice-1" placeholder="選択肢2">
+                  <input type="radio" name="correct-answer" value="1">
+                </div>
+                <div class="choice-image-area">
+                  <div id="choice-image-preview-1" class="choice-image-preview">
+                    <p class="no-image-small">画像なし</p>
+                  </div>
+                  <button type="button" class="btn-image-upload" onclick="uploadChoiceImage(1)">
+                    🖼️ 画像
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 選択肢3 -->
+              <div class="choice-input-group">
+                <div class="choice-input-row">
+                  <input type="text" id="edit-choice-2" placeholder="選択肢3">
+                  <input type="radio" name="correct-answer" value="2">
+                </div>
+                <div class="choice-image-area">
+                  <div id="choice-image-preview-2" class="choice-image-preview">
+                    <p class="no-image-small">画像なし</p>
+                  </div>
+                  <button type="button" class="btn-image-upload" onclick="uploadChoiceImage(2)">
+                    🖼️ 画像
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 選択肢4 -->
+              <div class="choice-input-group">
+                <div class="choice-input-row">
+                  <input type="text" id="edit-choice-3" placeholder="選択肢4">
+                  <input type="radio" name="correct-answer" value="3">
+                </div>
+                <div class="choice-image-area">
+                  <div id="choice-image-preview-3" class="choice-image-preview">
+                    <p class="no-image-small">画像なし</p>
+                  </div>
+                  <button type="button" class="btn-image-upload" onclick="uploadChoiceImage(3)">
+                    🖼️ 画像
+                  </button>
+                </div>
+              </div>
+            </div>
+            <small>正解の選択肢の横のラジオボタンをチェックしてください</small>
+          </div>
+        </div>
+        
+        <!-- text型の場合の正解 -->
+        <div id="text-answer-area" style="display: none;">
+          <div class="form-group">
+            <label>正解 <span class="required">*</span></label>
+            <input type="text" id="edit-text-answer" placeholder="正解の文字列を入力">
+          </div>
+        </div>
+        
+        <!-- 解説 -->
+        <div class="form-group">
+          <label>解説(任意)</label>
+          <textarea id="edit-explanation" rows="3" placeholder="解説を入力してください(省略可)"></textarea>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">保存</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* モーダル基本スタイル */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  
+  .modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .modal-header {
+    padding: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h2 {
+    font-size: 20px;
+    color: #2c3e50;
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #7f8c8d;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+  }
+  
+  .modal-close:hover {
+    color: #e74c3c;
+  }
+  
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .modal-footer {
+    padding: 20px;
+    border-top: 2px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  /* フォームスタイル */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 8px;
+  }
+  
+  .form-group .required {
+    color: #e74c3c;
+  }
+  
+  .form-group input[type="text"],
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #bdc3c7;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  
+  .form-group small {
+    color: #7f8c8d;
+    font-size: 12px;
+  }
+  
+  /* 🆕 画像アップロードエリア */
+  .image-upload-area {
+    border: 2px dashed #bdc3c7;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f8f9fa;
+  }
+  
+  .image-preview-area {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    background: white;
+    border-radius: 6px;
+  }
+  
+  .image-preview-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .image-preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 6px;
+    display: block;
+  }
+  
+  .btn-delete-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 5px 10px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .btn-delete-image:hover {
+    background: #c0392b;
+  }
+  
+  .no-image {
+    color: #95a5a6;
+    font-style: italic;
+  }
+  
+  .image-upload-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-sm {
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+  
+  .btn-secondary {
+    background: #95a5a6;
+    color: white;
+  }
+  
+  .btn-secondary:hover {
+    background: #7f8c8d;
+  }
+  
+  /* 選択肢画像エリア */
+  .choice-input-group {
+    margin-bottom: 15px;
+  }
+  
+  .choice-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .choice-input-row input[type="text"] {
+    flex: 1;
+  }
+  
+  .choice-input-row input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .choice-image-area {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding-left: 10px;
+  }
+  
+  .choice-image-preview {
+    flex: 1;
+    min-height: 60px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .choice-image-preview img {
+    max-width: 100%;
+    max-height: 100px;
+    display: block;
+  }
+  
+  .no-image-small {
+    color: #bdc3c7;
+    font-size: 11px;
+    font-style: italic;
+  }
+  
+  .btn-image-upload {
+    padding: 6px 12px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  
+  .btn-image-upload:hover {
+    background: #2980b9;
+  }
+  
+  .choice-image-preview .image-preview-container {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .choice-image-preview .btn-delete-image {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+</style>
     <!-- モーダルの内容は省略(builder.jsで制御) -->
   </div>
 
