@@ -97,37 +97,81 @@ function generateQuizHTML() {
   \`;
 }
 
-// choice型問題の描画
-function renderChoiceQuestion(questionData, questionIndex) {
+
+// choice型問題の描画(一覧表示用・画像対応版)
+function renderChoiceQuestionInList(questionData, questionIndex) {
   const questionText = questionData.question;
+  
+  // 問題画像
+  const questionImageHTML = questionData.image 
+    ? '<img src="' + questionData.image + '" alt="問題画像" class="question-image-list">' 
+    : '';
+  
   let choicesHTML = '';
-  questionData.choices.forEach((choice, index) => {
+  questionData.choices.forEach((choice, choiceIndex) => {
+    const inputId = \`q\${questionIndex}-choice\${choiceIndex}\`;
+    
+    // 選択肢画像
+    const choiceImage = questionData.choiceImages && questionData.choiceImages[choiceIndex]
+      ? '<img src="' + questionData.choiceImages[choiceIndex] + '" alt="' + choice + '" class="choice-image-list">'
+      : '';
+    
     choicesHTML += \`
-      <button class="choice-button" onclick="handleChoiceClick(\${questionIndex}, \${index})" data-index="\${index}">
-        \${choice}
-      </button>
+      <div class="choice-option">
+        <input 
+          type="radio" 
+          name="question-\${questionIndex}" 
+          id="\${inputId}" 
+          value="\${choiceIndex}"
+          onchange="saveAnswer('\${questionData.id}', \${choiceIndex})"
+        >
+        <label for="\${inputId}">
+          \${choiceImage}
+          <span>\${choice}</span>
+        </label>
+      </div>
     \`;
   });
+  
   return \`
-    <div class="question-container" data-question-id="\${questionData.id}">
-      <h2 class="question-text">\${questionText}</h2>
-      <div class="choices-container">\${choicesHTML}</div>
-      <div class="feedback" id="feedback"></div>
+    <div class="question-item-list" data-question-id="\${questionData.id}">
+      <div class="question-number">問題 \${questionIndex + 1}</div>
+      <h3 class="question-text-list">\${questionText}</h3>
+      \${questionImageHTML}
+      <div class="choices-container-list">
+        \${choicesHTML}
+      </div>
+      <div class="feedback-list" id="feedback-\${questionData.id}"></div>
     </div>
   \`;
 }
 
-// text型問題の描画
-function renderTextQuestion(questionData, questionIndex) {
+// text型問題の描画(一覧表示用・画像対応版)
+function renderTextQuestionInList(questionData, questionIndex) {
   const questionText = questionData.question;
+  const inputId = \`q\${questionIndex}-text\`;
+  
+  // 問題画像
+  const questionImageHTML = questionData.image 
+    ? '<img src="' + questionData.image + '" alt="問題画像" class="question-image-list">' 
+    : '';
+  
   return \`
-    <div class="question-container" data-question-id="\${questionData.id}">
-      <h2 class="question-text">\${questionText}</h2>
-      <div class="text-answer-container">
-        <input type="text" class="text-input" id="text-input-\${questionIndex}" placeholder="答えを入力してください" autocomplete="off">
-        <button class="submit-button" onclick="handleTextSubmit(\${questionIndex})">回答する</button>
+    <div class="question-item-list" data-question-id="\${questionData.id}">
+      <div class="question-number">問題 \${questionIndex + 1}</div>
+      <h3 class="question-text-list">\${questionText}</h3>
+      \${questionImageHTML}
+      <div class="text-answer-container-list">
+        <input 
+          type="text" 
+          class="text-input-list" 
+          id="\${inputId}" 
+          placeholder="答えを入力してください"
+          oninput="saveAnswer('\${questionData.id}', this.value)"
+          autocomplete="off"
+        >
       </div>
-      <div class="feedback" id="feedback"></div>
+      <div class="feedback-list" id="feedback-\${questionData.id}"></div>
     </div>
   \`;
 }
@@ -191,8 +235,6 @@ function handleChoiceClick(questionIndex, selectedIndex) {
   showNextButton();
 }
 
-// export.js の getPreviewJsCode() 関数内の
-// handleTextSubmit 関数を以下で置き換えてください
 
 // text型の回答判定
 function handleTextSubmit(questionIndex) {

@@ -426,6 +426,332 @@ function saveQuestion() {
  * // キャンセル → false
  */
 
+// builder.js に以下の変数とグローバル関数を追加してください
+
+// =====================================
+// 🖼️ 画像管理用グローバル変数
+// =====================================
+
+let currentQuestionImage = ''; // 編集中の問題画像
+let currentChoiceImages = ['', '', '', '']; // 編集中の選択肢画像
+
+// =====================================
+// 🖼️ 画像アップロード関数
+// =====================================
+
+/**
+ * 問題画像をアップロード
+ */
+function uploadQuestionImage() {
+  console.log('🖼️ 問題画像をアップロード');
+  
+  selectAndResizeImage((base64Image) => {
+    currentQuestionImage = base64Image;
+    
+    // プレビューを更新
+    const previewContainer = document.getElementById('question-image-preview');
+    if (previewContainer) {
+      previewContainer.innerHTML = createImagePreviewWithDelete(
+        base64Image, 
+        'delete-question-image'
+      );
+      
+      // 削除ボタンのイベント設定
+      const deleteBtn = document.getElementById('delete-question-image');
+      if (deleteBtn) {
+        deleteBtn.onclick = deleteQuestionImage;
+      }
+    }
+    
+    console.log('✅ 問題画像を設定しました');
+  }, 800, 600);
+}
+
+/**
+ * 問題画像をURLで追加
+ */
+function uploadQuestionImageByURL() {
+  console.log('🔗 問題画像をURLで追加');
+  
+  addImageByURL((url) => {
+    currentQuestionImage = url;
+    
+    const previewContainer = document.getElementById('question-image-preview');
+    if (previewContainer) {
+      previewContainer.innerHTML = createImagePreviewWithDelete(
+        url, 
+        'delete-question-image'
+      );
+      
+      const deleteBtn = document.getElementById('delete-question-image');
+      if (deleteBtn) {
+        deleteBtn.onclick = deleteQuestionImage;
+      }
+    }
+    
+    console.log('✅ 問題画像(URL)を設定しました');
+  });
+}
+
+/**
+ * 問題画像を削除
+ */
+function deleteQuestionImage() {
+  console.log('🗑️ 問題画像を削除');
+  
+  currentQuestionImage = '';
+  
+  const previewContainer = document.getElementById('question-image-preview');
+  if (previewContainer) {
+    previewContainer.innerHTML = '<p class="no-image">画像なし</p>';
+  }
+}
+
+/**
+ * 選択肢画像をアップロード
+ * 
+ * @param {number} index - 選択肢のインデックス(0〜3)
+ */
+function uploadChoiceImage(index) {
+  console.log(`🖼️ 選択肢${index + 1}の画像をアップロード`);
+  
+  selectAndResizeImage((base64Image) => {
+    currentChoiceImages[index] = base64Image;
+    
+    // プレビューを更新
+    const previewContainer = document.getElementById(`choice-image-preview-${index}`);
+    if (previewContainer) {
+      previewContainer.innerHTML = createImagePreviewWithDelete(
+        base64Image,
+        `delete-choice-image-${index}`
+      );
+      
+      // 削除ボタンのイベント設定
+      const deleteBtn = document.getElementById(`delete-choice-image-${index}`);
+      if (deleteBtn) {
+        deleteBtn.onclick = () => deleteChoiceImage(index);
+      }
+    }
+    
+    console.log(`✅ 選択肢${index + 1}の画像を設定しました`);
+  }, 400, 300);
+}
+
+/**
+ * 選択肢画像を削除
+ * 
+ * @param {number} index - 選択肢のインデックス(0〜3)
+ */
+function deleteChoiceImage(index) {
+  console.log(`🗑️ 選択肢${index + 1}の画像を削除`);
+  
+  currentChoiceImages[index] = '';
+  
+  const previewContainer = document.getElementById(`choice-image-preview-${index}`);
+  if (previewContainer) {
+    previewContainer.innerHTML = '<p class="no-image-small">画像なし</p>';
+  }
+}
+
+// =====================================
+// 📝 既存の openEditModal 関数を更新
+// =====================================
+
+/**
+ * 編集モーダルを開く(画像対応版)
+ * 
+ * @param {number} index - 編集する問題のインデックス
+ */
+function openEditModal(index) {
+  console.log(`✏️ 編集モーダルを開く: ${index}`);
+  
+  editingQuestionIndex = index;
+  const question = quizData.questions[index];
+  
+  // フォームに値をセット
+  document.getElementById('edit-type').value = question.type;
+  document.getElementById('edit-question').value = question.question;
+  document.getElementById('edit-explanation').value = question.explanation || '';
+  
+  // 🆕 問題画像を設定
+  currentQuestionImage = question.image || '';
+  const questionImagePreview = document.getElementById('question-image-preview');
+  if (questionImagePreview) {
+    if (currentQuestionImage) {
+      questionImagePreview.innerHTML = createImagePreviewWithDelete(
+        currentQuestionImage,
+        'delete-question-image'
+      );
+      
+      const deleteBtn = document.getElementById('delete-question-image');
+      if (deleteBtn) {
+        deleteBtn.onclick = deleteQuestionImage;
+      }
+    } else {
+      questionImagePreview.innerHTML = '<p class="no-image">画像なし</p>';
+    }
+  }
+  
+  if (question.type === 'choice') {
+    // choice型の場合
+    document.getElementById('edit-choice-0').value = question.choices[0];
+    document.getElementById('edit-choice-1').value = question.choices[1];
+    document.getElementById('edit-choice-2').value = question.choices[2];
+    document.getElementById('edit-choice-3').value = question.choices[3];
+    
+    // 正解のラジオボタンをチェック
+    document.querySelector(`input[name="correct-answer"][value="${question.answer}"]`).checked = true;
+    
+    // 🆕 選択肢画像を設定
+    currentChoiceImages = question.choiceImages || ['', '', '', ''];
+    for (let i = 0; i < 4; i++) {
+      const choiceImagePreview = document.getElementById(`choice-image-preview-${i}`);
+      if (choiceImagePreview) {
+        if (currentChoiceImages[i]) {
+          choiceImagePreview.innerHTML = createImagePreviewWithDelete(
+            currentChoiceImages[i],
+            `delete-choice-image-${i}`
+          );
+          
+          const deleteBtn = document.getElementById(`delete-choice-image-${i}`);
+          if (deleteBtn) {
+            deleteBtn.onclick = () => deleteChoiceImage(i);
+          }
+        } else {
+          choiceImagePreview.innerHTML = '<p class="no-image-small">画像なし</p>';
+        }
+      }
+    }
+  } else {
+    // text型の場合
+    const answer = Array.isArray(question.answer) ? question.answer[0] : question.answer;
+    document.getElementById('edit-text-answer').value = answer;
+  }
+  
+  // 問題タイプに応じて表示を切り替え
+  toggleQuestionType();
+  
+  // モーダルを表示
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+// =====================================
+// 💾 既存の saveQuestion 関数を更新
+// =====================================
+
+/**
+ * 問題を保存(画像対応版)
+ */
+function saveQuestion() {
+  console.log('💾 問題を保存');
+  
+  const type = document.getElementById('edit-type').value;
+  const question = document.getElementById('edit-question').value.trim();
+  const explanation = document.getElementById('edit-explanation').value.trim();
+  
+  if (!question) {
+    alert('⚠️ 問題文を入力してください');
+    return;
+  }
+  
+  const updatedQuestion = {
+    id: quizData.questions[editingQuestionIndex].id,
+    type: type,
+    question: question,
+    image: currentQuestionImage, // 🆕 画像を保存
+    explanation: explanation
+  };
+  
+  if (type === 'choice') {
+    const choices = [
+      document.getElementById('edit-choice-0').value.trim(),
+      document.getElementById('edit-choice-1').value.trim(),
+      document.getElementById('edit-choice-2').value.trim(),
+      document.getElementById('edit-choice-3').value.trim()
+    ];
+    
+    if (choices.some(c => !c)) {
+      alert('⚠️ 全ての選択肢を入力してください');
+      return;
+    }
+    
+    const correctAnswer = document.querySelector('input[name="correct-answer"]:checked');
+    if (!correctAnswer) {
+      alert('⚠️ 正解を選択してください');
+      return;
+    }
+    
+    updatedQuestion.choices = choices;
+    updatedQuestion.choiceImages = currentChoiceImages; // 🆕 選択肢画像を保存
+    updatedQuestion.answer = parseInt(correctAnswer.value);
+  } else {
+    const answer = document.getElementById('edit-text-answer').value.trim();
+    
+    if (!answer) {
+      alert('⚠️ 正解を入力してください');
+      return;
+    }
+    
+    updatedQuestion.answer = answer;
+  }
+  
+  quizData.questions[editingQuestionIndex] = updatedQuestion;
+  
+  renderQuestionList();
+  updatePreview();
+  closeEditModal();
+  
+  alert('✅ 問題を保存しました');
+}
+
+// =====================================
+// ➕ 新規問題追加時も画像初期化
+// =====================================
+
+/**
+ * 新しい問題を追加(画像対応版)
+ */
+function addNewQuestion() {
+  console.log('➕ 新しい問題追加');
+  
+  const newQuestion = {
+    id: `q${Date.now()}`,
+    type: 'choice',
+    question: '新しい問題',
+    image: '', // 🆕 画像初期化
+    choices: ['選択肢1', '選択肢2', '選択肢3', '選択肢4'],
+    choiceImages: ['', '', '', ''], // 🆕 選択肢画像初期化
+    answer: 0,
+    explanation: ''
+  };
+  
+  quizData.questions.push(newQuestion);
+  renderQuestionList();
+  updatePreview();
+  
+  editQuestion(quizData.questions.length - 1);
+}
+
+// =====================================
+// 🔍 デバッグ用
+// =====================================
+
+if (typeof window !== 'undefined') {
+  window.uploadQuestionImage = uploadQuestionImage;
+  window.uploadQuestionImageByURL = uploadQuestionImageByURL;
+  window.deleteQuestionImage = deleteQuestionImage;
+  window.uploadChoiceImage = uploadChoiceImage;
+  window.deleteChoiceImage = deleteChoiceImage;
+  console.log('✅ builder.js (画像対応) loaded');
+  console.log('🔧 画像アップロード関数が利用可能です');
+}
+
+
+
+
+
+
+
 // =====================================
 // 🔍 デバッグ用
 // =====================================
@@ -445,3 +771,5 @@ if (typeof window !== 'undefined') {
   window.saveQuestion = saveQuestion;
   console.log('✅ builder.js loaded');
 }
+
+

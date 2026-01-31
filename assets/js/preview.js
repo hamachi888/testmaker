@@ -73,50 +73,48 @@ function generateQuizHTML() {
   return html;
 }
 
+// preview.js の描画関数を以下で置き換えてください
+
 // =====================================
-// 🎯 問題表示関数（choice型）
+// 🎯 問題表示関数(choice型) - 画像対応版
 // =====================================
 
 /**
- * choice型の問題を表示するHTMLを生成
- * 
- * choice型の構造：
- * {
- *   type: "choice",
- *   question: "質問文",
- *   choices: ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
- *   answer: 0  // 正解のインデックス
- * }
- * 
- * @param {Object} questionData - 問題データ
- * @param {number} questionIndex - 問題番号（0から始まる）
- * @returns {string} HTML文字列
+ * choice型の問題を表示するHTMLを生成(画像対応版)
  */
 function renderChoiceQuestion(questionData, questionIndex) {
   console.log(`🎯 choice問題を描画: ${questionData.question}`);
   
-  // 質問文
   const questionText = questionData.question;
+  
+  // 🆕 問題画像の追加
+  const questionImageHTML = questionData.image 
+    ? `<img src="${questionData.image}" alt="問題画像" class="question-image">` 
+    : '';
   
   // 選択肢ボタンを生成
   let choicesHTML = '';
-  
-  // choices配列をループして、4つのボタンを作る
   questionData.choices.forEach((choice, index) => {
+    // 🆕 選択肢画像の追加
+    const choiceImage = questionData.choiceImages && questionData.choiceImages[index]
+      ? `<img src="${questionData.choiceImages[index]}" alt="${choice}" class="choice-image">`
+      : '';
+    
     choicesHTML += `
       <button 
         class="choice-button" 
         onclick="handleChoiceClick(${questionIndex}, ${index})"
         data-index="${index}">
-        ${choice}
+        ${choiceImage}
+        <span class="choice-text">${choice}</span>
       </button>
     `;
   });
   
-  // 全体のHTML
   const html = `
     <div class="question-container" data-question-id="${questionData.id}">
       <h2 class="question-text">${questionText}</h2>
+      ${questionImageHTML}
       <div class="choices-container">
         ${choicesHTML}
       </div>
@@ -128,33 +126,26 @@ function renderChoiceQuestion(questionData, questionIndex) {
 }
 
 // =====================================
-// 🎯 問題表示関数（text型）
+// 🎯 問題表示関数(text型) - 画像対応版
 // =====================================
 
 /**
- * text型の問題を表示するHTMLを生成
- * 
- * text型の構造：
- * {
- *   type: "text",
- *   question: "質問文",
- *   answer: "正解の文字列"
- * }
- * 
- * @param {Object} questionData - 問題データ
- * @param {number} questionIndex - 問題番号（0から始まる）
- * @returns {string} HTML文字列
+ * text型の問題を表示するHTMLを生成(画像対応版)
  */
 function renderTextQuestion(questionData, questionIndex) {
   console.log(`✏️ text問題を描画: ${questionData.question}`);
   
-  // 質問文
   const questionText = questionData.question;
   
-  // 全体のHTML
+  // 🆕 問題画像の追加
+  const questionImageHTML = questionData.image 
+    ? `<img src="${questionData.image}" alt="問題画像" class="question-image">` 
+    : '';
+  
   const html = `
     <div class="question-container" data-question-id="${questionData.id}">
       <h2 class="question-text">${questionText}</h2>
+      ${questionImageHTML}
       <div class="text-answer-container">
         <input 
           type="text" 
@@ -174,6 +165,41 @@ function renderTextQuestion(questionData, questionIndex) {
   
   return html;
 }
+
+// =====================================
+// 🎓 初級者向け説明
+// =====================================
+
+/**
+ * 【条件演算子(三項演算子)】
+ * 
+ * 条件 ? 真の場合 : 偽の場合
+ * 
+ * 例:
+ * const result = score >= 60 ? '合格' : '不合格';
+ * 
+ * questionData.image 
+ *   ? `<img src="${questionData.image}">` 
+ *   : '';
+ * 
+ * → imageがあれば<img>タグを返す
+ * → imageがなければ空文字列を返す
+ */
+
+/**
+ * 【論理AND演算子(&&)】
+ * 
+ * 左側がtrueの場合のみ右側を実行
+ * 
+ * questionData.choiceImages && questionData.choiceImages[index]
+ * 
+ * → choiceImagesが存在する かつ [index]に値がある場合のみtrue
+ * 
+ * 使い方:
+ * const value = obj && obj.property && obj.property.subProperty;
+ * → 途中でundefinedになっても安全にアクセス
+ */
+
 
 // =====================================
 // ✅ 回答判定関数（text型）

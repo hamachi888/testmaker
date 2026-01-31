@@ -3,9 +3,6 @@
  * 
  * クイズデータの定義ファイル
  * このオブジェクトが全てのクイズ情報を保持します。
- * 
- * 他のファイル(preview.js、export.js)は、
- * このquizDataを参照してクイズを表示・書き出しします。
  */
 
 /**
@@ -13,21 +10,25 @@
  * 
  * @property {Object} meta - クイズ全体の設定
  * @property {string} meta.title - クイズのタイトル
- * @property {boolean} meta.shuffle - 問題順をシャッフルするか(falseで固定順)
+ * @property {boolean} meta.shuffle - 問題順をシャッフルするか
  * @property {string} meta.displayType - 表示形式("sequential" または "list")
  * 
  * @property {Array} questions - 問題の配列
  * @property {string} questions[].id - 問題の一意識別子
  * @property {string} questions[].type - 問題形式("choice" または "text")
  * @property {string} questions[].question - 質問文
- * @property {Array|string|number} questions[].answer - 正解(型はtypeによる)
+ * @property {string} questions[].image - 問題画像(Base64またはURL・任意) 🆕
+ * @property {Array} questions[].choices - 選択肢配列(choice型のみ)
+ * @property {Array} questions[].choiceImages - 選択肢画像配列(任意) 🆕
+ * @property {Array|string|number} questions[].answer - 正解
+ * @property {string} questions[].explanation - 解説(任意)
  */
 const quizData = {
   // クイズ全体の設定
   meta: {
-    title: "サンプルクイズ",     // クイズのタイトル
-    shuffle: false,              // 問題順をシャッフルしない
-    displayType: "sequential"    // 🆕 表示形式: "sequential"(1問ずつ) または "list"(一覧)
+    title: "サンプルクイズ",
+    shuffle: false,
+    displayType: "sequential"
   },
   
   // 問題のリスト
@@ -36,28 +37,31 @@ const quizData = {
     // 問題1: choice(4択クイズ)
     // ========================================
     {
-      id: "q1",                    // 問題の識別子(一意であること)
-      type: "choice",              // 問題形式: 4択
-      question: "日本で一番高い山は?",  // 質問文
-      choices: [                   // 選択肢(必ず4つ)
-        "富士山",                  // choices[0]
-        "北岳",                    // choices[1]
-        "槍ヶ岳",                  // choices[2]
-        "立山"                     // choices[3]
+      id: "q1",
+      type: "choice",
+      question: "日本で一番高い山は?",
+      image: "", // 🆕 問題画像(Base64 or URL)
+      choices: [
+        "富士山",
+        "北岳",
+        "槍ヶ岳",
+        "立山"
       ],
-      answer: 0,                   // 正解のインデックス(0 = "富士山")
-      explanation: "富士山は標高3776mで日本一高い山です。"  // 解説(任意)
+      choiceImages: [], // 🆕 選択肢画像配列 ["", "", "", ""]
+      answer: 0,
+      explanation: "富士山は標高3776mで日本一高い山です。"
     },
     
     // ========================================
     // 問題2: text(一問一答)
     // ========================================
     {
-      id: "q2",                    // 問題の識別子(q1と違う値)
-      type: "text",                // 問題形式: テキスト入力
-      question: "What is the capital of Japan?",    // 質問文
-      answer: "Tokyo",             // 正解の文字列(完全一致で判定)
-      explanation: "Tokyo has been the capital of Japan since 1868."  // 解説(任意)
+      id: "q2",
+      type: "text",
+      question: "What is the capital of Japan?",
+      image: "", // 🆕 問題画像
+      answer: "Tokyo",
+      explanation: "Tokyo has been the capital of Japan since 1868."
     }
   ]
 };
@@ -65,6 +69,45 @@ const quizData = {
 // =====================================
 // 🎓 初級者向け説明コーナー
 // =====================================
+
+/**
+ * 【画像の追加方法】
+ * 
+ * 1. Base64形式(おすすめ):
+ *    image: "data:image/png;base64,iVBORw0KGgoAAAANS..."
+ *    - 画像データを文字列として埋め込む
+ *    - 外部ファイル不要でWordPressに貼り付けるだけで動作
+ *    - ファイルサイズが大きくなる
+ * 
+ * 2. URL形式:
+ *    image: "https://example.com/image.jpg"
+ *    - 外部の画像URLを指定
+ *    - ファイルサイズは小さい
+ *    - 外部サーバーが必要
+ * 
+ * 3. 画像なし:
+ *    image: ""
+ *    - 空文字列の場合は画像を表示しない
+ */
+
+/**
+ * 【choiceImagesとは】
+ * 
+ * choice型の選択肢に画像を使う場合に使用します。
+ * 
+ * 例:
+ * choices: ["選択肢1", "選択肢2", "選択肢3", "選択肢4"]
+ * choiceImages: [
+ *   "data:image/png;base64,...", // 選択肢1の画像
+ *   "",                           // 選択肢2は画像なし
+ *   "https://example.com/3.jpg",  // 選択肢3の画像
+ *   ""                            // 選択肢4は画像なし
+ * ]
+ * 
+ * - 配列の長さはchoicesと同じ(4つ)
+ * - 画像がない選択肢は空文字列 ""
+ * - テキストと画像の両方を表示可能
+ */
 
 /**
  * 【displayTypeとは】
@@ -80,80 +123,36 @@ const quizData = {
  * - 全問題を一覧で表示
  * - 全問回答してから「採点」ボタン
  * - テスト形式に適している
- * 
- * 使い分け:
- * - 学習用・練習用 → sequential
- * - テスト・試験用 → list
  */
 
 /**
- * 【配列の中のオブジェクト】
+ * 【複数正解(answer配列)】
  * 
- * questions: [
- *   { id: "q1", ... },  ← これが1つ目のオブジェクト
- *   { id: "q2", ... }   ← これが2つ目のオブジェクト
- * ]
+ * text型で複数の正解パターンを設定できます。
  * 
- * アクセス方法:
- * quizData.questions[0]       // 1問目全体
- * quizData.questions[0].type  // 1問目のtype("choice")
- * quizData.questions[1].type  // 2問目のtype("text")
- */
-
-/**
- * 【choiceとtextの違い】
+ * 正解が1つ:
+ * answer: "東京"
  * 
- * choice:
- * - choices配列を持つ(4つの選択肢)
- * - answerは数字(0〜3のインデックス)
- * - 例: answer: 0 → choices[0]が正解
+ * 正解が複数(表記ゆれ対応):
+ * answer: ["東京", "tokyo", "トウキョウ"]
  * 
- * text:
- * - choices配列なし
- * - answerは文字列
- * - 例: answer: "東京" → ユーザーが「東京」と入力すれば正解
- */
-
-/**
- * 【データの読み方】
- * 
- * 1問目の正解を取得:
- * const q1 = quizData.questions[0];
- * const correctAnswer = q1.choices[q1.answer];  // "富士山"
- * 
- * 2問目の正解を取得:
- * const q2 = quizData.questions[1];
- * const correctAnswer = q2.answer;  // "Tokyo"
- */
-
-/**
- * 【問題を追加する方法(将来のため)】
- * 
- * questions配列に新しいオブジェクトを追加:
- * 
- * quizData.questions.push({
- *   id: "q3",
- *   type: "choice",
- *   question: "新しい質問",
- *   choices: ["A", "B", "C", "D"],
- *   answer: 0
- * });
+ * いずれかに一致すれば正解になります。
  */
 
 // =====================================
-// 🔍 デバッグ用(開発中のみ)
+// 🔍 デバッグ用
 // =====================================
 
-// ブラウザのコンソールでquizDataを確認できるようにする
 if (typeof window !== 'undefined') {
   window.quizData = quizData;
-  console.log('✅ data.js loaded');
+  console.log('✅ data.js loaded (画像対応版)');
   console.log('📊 Current quizData:', quizData);
   console.log('📝 問題数:', quizData.questions.length);
   console.log('🎨 表示形式:', quizData.meta.displayType);
   
-  // 各問題の概要を表示
   quizData.questions.forEach((q, index) => {
-    console.log(`問題${index + 1} [${q.type}]: ${q.question}`);
+    const hasImage = q.image ? '🖼️' : '';
+    const hasChoiceImages = q.choiceImages && q.choiceImages.some(img => img) ? '🎨' : '';
+    console.log(`問題${index + 1} [${q.type}]: ${q.question} ${hasImage}${hasChoiceImages}`);
   });
 }
